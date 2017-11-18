@@ -1,34 +1,33 @@
 'use strict';
 
-const refreshUserAvailableCredits = require('./lib/refreshUserAvailableCredits');
+import * as functions from 'firebase-functions'
+import * as admin from 'firebase-admin'
+import { refreshUserAvailableCredits } from './lib/refreshUserAvailableCredits';
 
 /**
  * Query total sum from transfers, deduct total sum from purchases, save as user.availableCredits
  * Triggers: new transfer document, new transfer document
  */
-module.exports = function (functions, admin) {
+const handler = async (event: functions.Event<any>) => {
 
-    return functions.firestore.document('/users/{userId}/transfers/{transferId}')
-        .onCreate(event => {
+    // TODO: ONLY FINISHED TRANSFERS
 
-            // TODO: ONLY FINISHED TRANSFERS
+    const transferDocumentReference = event.data.ref;
+    const transfersCollectionReference = transferDocumentReference.parent;
+    const userRef = transfersCollectionReference.parent;
 
-            const transferDocumentReference = event.data.ref;
-            const transfersCollectionReference = transferDocumentReference.parent;
-            const userRef = transfersCollectionReference.parent;
+    console.log('transferDocumentReference: ', transferDocumentReference);
+    console.log('transfersCollectionReference: ', transfersCollectionReference);
+    console.log('userRef: ', userRef);
 
-            console.log('transferDocumentReference: ', transferDocumentReference);
-            console.log('transfersCollectionReference: ', transfersCollectionReference);
-            console.log('userRef: ', userRef);
+    const userDocumentSnapshot = await userRef.get();
 
-            return userRef.get().then(userDocumentSnapshot => {
-                if (userDocumentSnapshot.exists) {
-                    console.log('userDocumentSnapshot: ', userDocumentSnapshot);
-                    refreshUserAvailableCredits(userDocumentSnapshot);
+    if (userDocumentSnapshot.exists) {
+        console.log('userDocumentSnapshot: ', userDocumentSnapshot);
+        await refreshUserAvailableCredits(userDocumentSnapshot);
+    }
 
-                }
-            });
-
-        });
+    return;
 
 };
+export const listener = functions.firestore.document('/users/{userId}/transfers/{transferId}').onCreate(handler);

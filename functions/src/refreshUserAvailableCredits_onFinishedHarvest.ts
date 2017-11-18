@@ -1,33 +1,33 @@
 'use strict';
 
-const refreshUserAvailableCredits = require('./lib/refreshUserAvailableCredits');
+import * as functions from 'firebase-functions'
+import * as admin from 'firebase-admin'
+import { refreshUserAvailableCredits } from './lib/refreshUserAvailableCredits';
 
 /**
  * Query total sum from harvests, deduct total sum from purchases, save as user.availableCredits
- * Triggers: new harvest document, new transfer document
+ * Triggers: new harvest document, new harvest document
  */
-module.exports = function (functions, admin) {
+const handler = async (event: functions.Event<any>) => {
 
-    return functions.firestore.document('/users/{userId}/harvests/{harvestId}')
-        .onWrite(event => {
+    // TODO: ONLY FINISHED TRANSFERS
 
-            // TODO: ONLY FINISHED HARVESTS
+    const harvestDocumentReference = event.data.ref;
+    const harvestsCollectionReference = harvestDocumentReference.parent;
+    const userRef = harvestsCollectionReference.parent;
 
-            const harvestDocumentReference = event.data.ref;
-            const harvestsCollectionReference = harvestDocumentReference.parent;
-            const userRef = harvestsCollectionReference.parent;
+    console.log('harvestDocumentReference: ', harvestDocumentReference);
+    console.log('harvestsCollectionReference: ', harvestsCollectionReference);
+    console.log('userRef: ', userRef);
 
-            console.log('harvestDocumentReference: ', harvestDocumentReference);
-            console.log('harvestsCollectionReference: ', harvestsCollectionReference);
-            console.log('userRef: ', userRef);
+    const userDocumentSnapshot = await userRef.get();
 
-            return userRef.get().then(userDocumentSnapshot => {
-                if (userDocumentSnapshot.exists) {
-                    console.log('userDocumentSnapshot: ', userDocumentSnapshot);
-                    refreshUserAvailableCredits(userDocumentSnapshot);
-                }
-            });
+    if (userDocumentSnapshot.exists) {
+        console.log('userDocumentSnapshot: ', userDocumentSnapshot);
+        await refreshUserAvailableCredits(userDocumentSnapshot);
+    }
 
-        });
+    return;
 
 };
+export const listener = functions.firestore.document('/users/{userId}/harvests/{harvestId}').onCreate(handler);
