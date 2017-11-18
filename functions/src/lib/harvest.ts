@@ -12,12 +12,24 @@
 module.exports = function (userDocumentSnapshot) {
 
     // Poll stash balances (queries OP APIs for account balances)
+    // TODO
 
-    // Calculate amount of credits to issue
-
-    // Issue credits (based on last time harvest was made - TODO: possibly via corda-check to be certain that our database is not rigged to issue too many credits)
+    // Calculate amount of credits to issue (based on last time harvest was made - TODO: possibly via corda-check to be certain that our database is not rigged to issue too many credits)
+    const creditsToIssue = 12312;
 
     // Record issue of credits in corda (using the Corda REST API)
+    // TODO
+
+    // Finish the harvest + Update the amount of issued credits
+
+    userDocumentSnapshot
+
+                            return userStateRef.set({
+                                schemaRevision,
+                                operationsStage,
+                                operationsState
+                            }, {merge: true}).then(() => {
+
 
     return true;
 
