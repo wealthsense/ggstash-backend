@@ -3,6 +3,7 @@
   "description": "This package.json contains all dependencies for all Firebase Cloud Functions which are organized in subfolders",
   "dependencies": {
     "add": "2.0.6",
+    "axios": "^0.17.1",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.1",
     "express": "^4.14.1",
@@ -14,6 +15,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@google-cloud/firestore": "^0.10.0",
     "ts-loader": "^3.1.1",
     "typescript": "^2.6.1",
     "webpack-node-externals": "^1.6.0"
