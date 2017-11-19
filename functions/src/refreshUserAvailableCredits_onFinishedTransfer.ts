@@ -2,13 +2,14 @@
 
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
-import { refreshUserAvailableCredits } from './lib/refreshUserAvailableCredits';
+import {refreshUserAvailableCredits} from './lib/refreshUserAvailableCredits';
+import {DeltaDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 
 /**
  * Query total sum from transfers, deduct total sum from purchases, save as user.availableCredits
  * Triggers: new transfer document, new transfer document
  */
-const handler = async (event: functions.Event<any>) => {
+const handler = async (event: firebase.Event<DeltaDocumentSnapshot>) => {
 
     // TODO: ONLY FINISHED TRANSFERS
 
@@ -25,6 +26,8 @@ const handler = async (event: functions.Event<any>) => {
     if (userDocumentSnapshot.exists) {
         console.log('userDocumentSnapshot: ', userDocumentSnapshot);
         await refreshUserAvailableCredits(userDocumentSnapshot);
+    } else {
+        console.log('userDocumentSnapshot does not exist');
     }
 
     return;

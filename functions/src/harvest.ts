@@ -2,7 +2,7 @@
 
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
-import { harvest } from './lib/harvest';
+import {harvest} from './lib/harvest';
 
 /**
  * Poll stash balances, issue credits based on last time harvest was made (possibly via corda-check to be certain) and record issue of
@@ -33,5 +33,4 @@ const handler = async (event: functions.Event<any>) => {
     return;
 
 };
-
 export const listener = functions.firestore.document('/users/{userId}/harvests/{harvestId}').onCreate(handler);

@@ -19,29 +19,35 @@ import * as opBankApi from './opBankApi';
  */
 export const harvest = async function (userDocumentSnapshot: DeltaDocumentSnapshot, harvestDocumentReference: FirebaseFirestore.DocumentReference) {
 
-    // Poll stash balances (queries OP APIs for account balances)
-    const accounts = await opBankApi.accounts();
+    // Poll stash balance (queries OP APIs for account balances)
+    const stashAccountBalance = await opBankApi.stashAccountBalance();
 
-    // Calculate amount of credits to issue (based on last time harvest was made - TODO: possibly via corda-check to be certain that our database is not rigged to issue too many credits)
-    const creditsToIssue = 12312;
+    // Check days since last harvest
+    // TODO: Actually check, for demo assume it was 1 day ago
+    // TODO: possibly via corda-check to be certain that it was registered at that time
+    const daysSinceLastHarvest = 1;
+
+    // Calculate amount of credits to issue (based on last time harvest was made)
+    // Assuming EUR and a conversion rate of 1 EUR per day / credit
+    // Important to end up without a fraction, credits are discrete
+    const creditsToIssue = Math.floor(stashAccountBalance * daysSinceLastHarvest);
 
     // Record issue of credits in corda (using the Corda REST API)
-    const cordaTransactionId = await cordaApi.registerIssuedCredit();
+    const cordaResponse = await cordaApi.registerIssuedCredits(creditsToIssue);
+    const issuedCredits = creditsToIssue;
 
     // Finish the harvest + Update the amount of issued credits
-
     const harvestTimestamp = new Date();
     const updateAttributes = {
-        accounts, // tmp
-        credits: creditsToIssue,
-        cordaTransactionId,
+        status: 'registered',
+        credits: issuedCredits,
+        cordaResponse,
         harvestTimestamp,
     };
-    const harvestDocumentWriteResult = await harvestDocumentReference.set(updateAttributes, {merge: true});
+    await harvestDocumentReference.set(updateAttributes, {merge: true});
     const harvestDocumentSnapshot = await harvestDocumentReference.get();
 
-    console.log('harvestDocumentSnapshot: ', harvestDocumentSnapshot);
-    console.log('updated harvestDocumentSnapshot: ', harvestDocumentSnapshot.data());
+    console.log('updated harvestDocumentSnapshot after harvest: ', harvestDocumentSnapshot.data());
 
     return;
 
