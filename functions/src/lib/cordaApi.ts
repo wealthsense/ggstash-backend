@@ -5,8 +5,10 @@ import * as admin from 'firebase-admin'
 import * as FirebaseFirestore from '@google-cloud/firestore';
 import axios from 'axios';
 
-export const registerIssuedCredits = async (issuedCredits) => {
+export const registerIssuedCredits = async (issuedCredits, userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot) => {
     //try {
+
+    // TODO: Actually tag the corda transaction with user and bank info
 
     const cordaTunnelDocument: FirebaseFirestore.DocumentReference = await admin.firestore().collection('settings').doc('cordaTunnel');
     const cordaTunnelDocumentSnapshot: FirebaseFirestore.DocumentSnapshot = await cordaTunnelDocument.get();

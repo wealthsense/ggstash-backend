@@ -17,10 +17,10 @@ import * as opBankApi from './opBankApi';
  * @param harvestDocumentReference
  * @returns {Promise<boolean>}
  */
-export const harvest = async function (userDocumentSnapshot: DeltaDocumentSnapshot, harvestDocumentReference: FirebaseFirestore.DocumentReference) {
+export const harvest = async function (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot, harvestDocumentReference: FirebaseFirestore.DocumentReference) {
 
     // Poll stash balance (queries OP APIs for account balances)
-    const stashAccountBalance = await opBankApi.stashAccountBalance();
+    const stashAccountBalance = await opBankApi.stashAccountBalance(userDocumentSnapshot);
 
     // Check days since last harvest
     // TODO: Actually check, for demo assume it was 1 day ago
@@ -33,7 +33,7 @@ export const harvest = async function (userDocumentSnapshot: DeltaDocumentSnapsh
     const creditsToIssue = Math.floor(stashAccountBalance * daysSinceLastHarvest);
 
     // Record issue of credits in corda (using the Corda REST API)
-    const cordaResponse = await cordaApi.registerIssuedCredits(creditsToIssue);
+    const cordaResponse = await cordaApi.registerIssuedCredits(creditsToIssue, userDocumentSnapshot);
     const issuedCredits = creditsToIssue;
 
     // Finish the harvest + Update the amount of issued credits

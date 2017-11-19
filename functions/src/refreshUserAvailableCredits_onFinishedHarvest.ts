@@ -12,13 +12,15 @@ import {DeltaDocumentSnapshot} from "firebase-functions/lib/providers/firestore"
  */
 const handler = async (event: firebase.Event<DeltaDocumentSnapshot>) => {
 
-    // TODO: ONLY FINISHED TRANSFERS
-
     const harvestDocumentReference : FirebaseFirestore.DocumentReference = event.data.ref;
-    const harvestDocument = await harvestDocumentReference.get();
+    const harvestDocumentDocumentSnapshot : FirebaseFirestore.DocumentSnapshot = await harvestDocumentReference.get();
+    const harvestDocument = harvestDocumentDocumentSnapshot.data();
 
     console.log('harvestDocument', harvestDocument);
-    // status === 'registered'
+
+    if (harvestDocument.status !== 'registered') {
+        return;
+    }
 
     const harvestsCollectionReference = harvestDocumentReference.parent;
     const userRef = harvestsCollectionReference.parent;
@@ -39,4 +41,4 @@ const handler = async (event: firebase.Event<DeltaDocumentSnapshot>) => {
     return;
 
 };
-export const listener = functions.firestore.document('/users/{userId}/harvests/{harvestId}').onCreate(handler);
+export const listener = functions.firestore.document('/users/{userId}/harvests/{harvestId}').onWrite(handler);

@@ -6,20 +6,20 @@ import * as FirebaseFirestore from '@google-cloud/firestore';
 import axios, {AxiosRequestConfig, AxiosPromise} from 'axios';
 import * as _ from 'lodash';
 
-export const stashAccountBalance = async () => {
+export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot) => {
 
     /**
      * Queries OP APIs for account balances
      * @returns {Promise<void>}
      */
-    const fetchAccountsInfo = async () => {
+    const fetchAccountsInfo = async (apiKey: string, authorizationHeader: string) => {
         //try {
 
         const url = 'https://sandbox.apis.op-palvelut.fi/v1/accounts';
         const config: AxiosRequestConfig = {
             headers: {
-                'x-api-key': 'gbFD1plpFYH52VZS3wLuD2gI7I8SAVWA',
-                'x-authorization': 'b6910384440ce06f495976f96a162e2ab1bafbb4',
+                'x-api-key': apiKey,
+                'x-authorization': authorizationHeader,
                 'x-request-id': '111',
                 'x-session-id': '234',
             },
@@ -38,17 +38,27 @@ export const stashAccountBalance = async () => {
 
     };
 
-    /*
-    const cordaTunnelDocument: FirebaseFirestore.DocumentReference = await admin.firestore().collection('settings').doc('cordaTunnel');
-    const cordaTunnelDocumentSnapshot: FirebaseFirestore.DocumentSnapshot = await cordaTunnelDocument.get();
-    const cordaTunnel: FirebaseFirestore.DocumentData = await cordaTunnelDocumentSnapshot.data();
-    console.log('cordaTunnel: ', cordaTunnel);
-    */
 
-    const accounts = await fetchAccountsInfo();
+    const user: FirebaseFirestore.DocumentData = await userDocumentSnapshot.data();
+    console.log('user: ', user);
+
+    if (!user.accountConfig) {
+        console.log('No user.accountConfig');
+        return 0;
+    }
+
+    if (!user.accountConfig.stashAccountIban) {
+        console.log('No user.accountConfig.stashAccountIban');
+        return 0;
+    }
+
+    const apiKey = 'gbFD1plpFYH52VZS3wLuD2gI7I8SAVWA';
+    const authorizationHeader = 'b6910384440ce06f495976f96a162e2ab1bafbb4';
+
+    const accounts = await fetchAccountsInfo(apiKey, authorizationHeader);
 
     const stashAccount = _.find(accounts, (account) => {
-        return account.iban === 'FI1958400720090508';
+        return account.iban === user.accountConfig.stashAccountIban;
     });
     console.log('stashAccount', stashAccount);
 
@@ -87,7 +97,7 @@ Sample response for account-listing:
   {
     "accountId": "4270acb4db4a8b82c954ff93e5c81f2f38fd5a2f",
     "accountType": "710001",
-    "iban": "FI1958400720090508",
+    "iban": "FI1958400720090508", <-- for use as stash account
     "bic": "OKOYFIHH",
     "accountName": "KÄYTTÖTILI",
     "balance": 2275.71,
@@ -117,7 +127,7 @@ Sample response for account-listing:
   {
     "accountId": "a329ea3cec30a5f2fcadc38b76247f2f02c0a1a1",
     "accountType": "710001",
-    "iban": "FI3959986920207073",
+    "iban": "FI3959986920207073", <-- for use as stash account
     "bic": "OKOYFIHH",
     "accountName": "KÄYTTÖTILI",
     "balance": 2215.81,

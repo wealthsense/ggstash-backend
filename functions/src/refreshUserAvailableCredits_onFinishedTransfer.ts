@@ -2,6 +2,7 @@
 
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import * as FirebaseFirestore from '@google-cloud/firestore';
 import {refreshUserAvailableCredits} from './lib/refreshUserAvailableCredits';
 import {DeltaDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 
@@ -11,9 +12,16 @@ import {DeltaDocumentSnapshot} from "firebase-functions/lib/providers/firestore"
  */
 const handler = async (event: firebase.Event<DeltaDocumentSnapshot>) => {
 
-    // TODO: ONLY FINISHED TRANSFERS
+    const transferDocumentReference : FirebaseFirestore.DocumentReference = event.data.ref;
+    const transferDocumentDocumentSnapshot : FirebaseFirestore.DocumentSnapshot = await transferDocumentReference.get();
+    const transferDocument = transferDocumentDocumentSnapshot.data();
 
-    const transferDocumentReference = event.data.ref;
+    console.log('transferDocument', transferDocument);
+
+    if (transferDocument.status !== 'registered') {
+        return;
+    }
+
     const transfersCollectionReference = transferDocumentReference.parent;
     const userRef = transfersCollectionReference.parent;
 
@@ -33,4 +41,4 @@ const handler = async (event: firebase.Event<DeltaDocumentSnapshot>) => {
     return;
 
 };
-export const listener = functions.firestore.document('/users/{userId}/transfers/{transferId}').onCreate(handler);
+export const listener = functions.firestore.document('/users/{userId}/transfers/{transferId}').onWrite(handler);

@@ -42,9 +42,9 @@ const calculateAvailableCredits = async (userDocumentSnapshot: FirebaseFirestore
         const docsPromise: Promise<FirebaseFirestore.QuerySnapshot> = query.get();
         console.log('docsPromise', docsPromise);
         const docs: FirebaseFirestore.QuerySnapshot = await docsPromise;
-        docs.forEach(doc => {
-            console.log('doc in loop', doc);
+        docs.forEach((doc: FirebaseFirestore.DocumentSnapshot) => {
             const docData = doc.data();
+            console.log('doc in loop data', docData);
             credits += docData.credits;
         });
         return credits;
