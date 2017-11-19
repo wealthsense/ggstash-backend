@@ -6,7 +6,6 @@ import * as FirebaseFirestore from '@google-cloud/firestore';
 import axios from 'axios';
 
 export const registerIssuedCredits = async (issuedCredits, userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot) => {
-    //try {
 
     // TODO: Actually tag the corda transaction with user and bank info
 
@@ -22,11 +21,5 @@ export const registerIssuedCredits = async (issuedCredits, userDocumentSnapshot:
     console.log('Corda response.data: ', response.data);
 
     return response.data;
-
-    /*
-    } catch (error) {
-        console.log('Request error: ', error);
-    }
-    */
 
 };
