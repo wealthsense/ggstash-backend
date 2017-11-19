@@ -18,10 +18,10 @@ export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestor
         const url = 'https://sandbox.apis.op-palvelut.fi/v1/accounts';
         const config: AxiosRequestConfig = {
             headers: {
-                'x-api-key': apiKey,
-                'x-authorization': authorizationHeader,
-                'x-request-id': '111',
-                'x-session-id': '234',
+                'x-api-key': apiKey, // Consumer application’s api-key
+                'x-authorization': authorizationHeader, // Token for end-user simulation
+                'x-request-id': '111', // Request unique identifier (not validated at the moment)
+                'x-session-key': '234', // Session identifier for in-memory data
             },
         };
 
@@ -38,7 +38,6 @@ export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestor
 
     };
 
-
     const user: FirebaseFirestore.DocumentData = await userDocumentSnapshot.data();
     console.log('user: ', user);
 
@@ -51,6 +50,15 @@ export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestor
         console.log('No user.accountConfig.stashAccountIban');
         return 0;
     }
+
+    /*
+    Currently authentication is simulated with static tokens. You can pass along x-authorization header with one of following tokens to get access to different end user data:
+    TOKEN
+    fdb6c7c24bbc3a2c4144c1848825ab7d3a4ccb43
+    b6910384440ce06f495976f96a162e2ab1bafbb4
+    7a66629ddf3691a66eb6466ab7a9f610de531047
+    3af871a0e3ebfc46f375ff2b63d1414982bd4f76
+     */
 
     const apiKey = 'gbFD1plpFYH52VZS3wLuD2gI7I8SAVWA';
     const authorizationHeader = 'b6910384440ce06f495976f96a162e2ab1bafbb4';
@@ -177,3 +185,99 @@ Sample response for account-listing:
 ]
 
 */
+
+export const stash = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot, amount: float) => {
+
+    /**
+     * Queries OP APIs for account balances
+     * @returns {Promise<void>}
+     */
+    const initiatePayment = async (apiKey: string, authorizationHeader: string) => {
+        //try {
+
+        const user: FirebaseFirestore.DocumentData = await userDocumentSnapshot.data();
+        console.log('user: ', user);
+
+        if (!user.accountConfig) {
+            console.log('No user.accountConfig');
+            throw Error('No user.accountConfig');
+        }
+
+        if (!user.accountConfig.stashAccountIban) {
+            console.log('No user.accountConfig.stashAccountIban');
+            throw Error('No user.accountConfig.stashAccountIban');
+        }
+
+        if (!user.accountConfig.checkingsAccountIban) {
+            console.log('No user.accountConfig.checkingsAccountIban');
+            throw Error('No user.accountConfig.checkingsAccountIban');
+        }
+
+        const url = 'https://sandbox.apis.op-palvelut.fi/v1/payments/initiate';
+        const config: AxiosRequestConfig = {
+            headers: {
+                'x-api-key': apiKey,
+                'x-authorization': authorizationHeader,
+                'x-request-id': '111',
+                'x-session-key': '234',
+            },
+            data: {
+                "amount": amount,
+                "subject": "GGSTASH",
+                "currency": "EUR",
+                "payerIban": user.accountConfig.checkingsAccountIban,
+                "valueDate": "2017-11-16T15:05:41Z",
+                "receiverBic": "OKOYFIHH",
+                "receiverIban": user.accountConfig.stashAccountIban,
+                "receiverName": "Me"
+            },
+        };
+
+        console.log('OP Bank initiatePayment request url: ', url);
+        console.log('OP Bank initiatePayment request config: ', config);
+
+        const response = await axios.post(url, config);
+        console.log('OP Bank response.data: ', response.data);
+
+        /*
+
+        response:
+
+        * Connection #0 to host sandbox.apis.op-palvelut.fi left intact
+        {"amount":100,"subject":"Saving money for gold","currency":"EUR","payerIban":"FI1958400720090508","valueDate":"2017-11-16T15:05:41Z","receiverBic":"OKOYFIHH","receiverIban":"FI7858400761900714","receiverName":"Me","paymentId":"1ef733d0-cbd1-11e7-895a-3b1aceeacc9c"}
+
+
+        confirm:
+
+        curl -v -X POST https://sandbox.apis.op-palvelut.fi/v1/payments/confirm   -H 'Content-Type: application/json'   -H 'Accept: application/json'  -H 'x-api-key: gbFD1plpFYH52VZS3wLuD2gI7I8SAVWA' --data '{"amount":100,"subject":"Saving money for gold","currency":"EUR","payerIban":"FI1958400720090508","valueDate":"2017-11-16T15:05:41Z","receiverBic":"OKOYFIHH","receiverIban":"FI7858400761900714","receiverName":"Me","paymentId":"71fae180-cbd1-11e7-895a-3b1aceeacc9c"}'
+
+
+        response:
+
+        {"amount":100,"subject":"Saving money for gold","currency":"EUR","payerIban":"FI1958400720090508","valueDate":"2017-11-16T15:05:41Z","receiverBic":"OKOYFIHH","receiverIban":"FI7858400761900714","receiverName":"Me","paymentId":"71fae180-cbd1-11e7-895a-3b1aceeacc9c"}
+
+         */
+
+        return response.data;
+
+        /*
+        } catch (error) {
+            console.log('Request error: ', error);
+        }
+        */
+
+    };
+
+    const apiKey = 'gbFD1plpFYH52VZS3wLuD2gI7I8SAVWA';
+    const authorizationHeader = 'b6910384440ce06f495976f96a162e2ab1bafbb4';
+
+    const foo = await initiatePayment(apiKey, authorizationHeader);
+
+    console.log('foo', foo);
+
+    return foo;
+
+};
+
+
+

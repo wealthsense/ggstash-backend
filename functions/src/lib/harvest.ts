@@ -3,7 +3,6 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import * as FirebaseFirestore from '@google-cloud/firestore';
-import {DeltaDocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 import * as cordaApi from './cordaApi';
 import * as opBankApi from './opBankApi';
 
@@ -13,9 +12,9 @@ import * as opBankApi from './opBankApi';
  * the issue of credits for the clients)
  * Trigger: new harvest document
  *
- * @param {DeltaDocumentSnapshot} userDocumentSnapshot
- * @param harvestDocumentReference
- * @returns {Promise<boolean>}
+ * @param {FirebaseFirestore.DocumentSnapshot} userDocumentSnapshot
+ * @param {FirebaseFirestore.DocumentReference} harvestDocumentReference
+ * @returns {Promise<void>}
  */
 export const harvest = async function (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot, harvestDocumentReference: FirebaseFirestore.DocumentReference) {
 
