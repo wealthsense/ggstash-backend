@@ -6,7 +6,11 @@ import * as FirebaseFirestore from '@google-cloud/firestore';
 import axios, {AxiosRequestConfig, AxiosPromise} from 'axios';
 import * as _ from 'lodash';
 
-export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot) => {
+/**
+ * @param {FirebaseFirestore.DocumentSnapshot} userDocumentSnapshot
+ * @returns {Promise<FirebaseFirestore.DocumentSnapshot>}
+ */
+export const syncUserAccountInfo = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot) => {
 
     /**
      * Queries OP APIs for account balances
@@ -43,12 +47,17 @@ export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestor
 
     if (!user.accountConfig) {
         console.log('No user.accountConfig');
-        return 0;
+        throw Error('No user.accountConfig');
     }
 
     if (!user.accountConfig.stashAccountIban) {
         console.log('No user.accountConfig.stashAccountIban');
-        return 0;
+        throw Error('No user.accountConfig.stashAccountIban');
+    }
+
+    if (!user.accountConfig.checkingsAccountIban) {
+        console.log('No user.accountConfig.checkingsAccountIban');
+        throw Error('No user.accountConfig.checkingsAccountIban');
     }
 
     /*
@@ -70,11 +79,26 @@ export const stashAccountBalance = async (userDocumentSnapshot: FirebaseFirestor
     });
     console.log('stashAccount', stashAccount);
 
-    if (!stashAccount) {
-        return 0;
-    }
+    const checkingsAccount = _.find(accounts, (account) => {
+        return account.iban === user.accountConfig.checkingsAccountIban;
+    });
+    console.log('checkingsAccount', checkingsAccount);
 
-    return stashAccount.balance;
+    const accountInfoSyncTimestamp = new Date();
+    const updateAttributes = {
+        accountInfo: {
+            stashAccount,
+            checkingsAccount,
+            accountInfoSyncTimestamp,
+        }
+    };
+    const userDocumentReference = userDocumentSnapshot.ref;
+    await userDocumentReference.set(updateAttributes, {merge: true});
+    const updatedUserDocumentSnapshot = await userDocumentReference.get();
+
+    console.log('updated userDocumentSnapshot after user: ', updatedUserDocumentSnapshot.data());
+
+    return updatedUserDocumentSnapshot;
 
 };
 

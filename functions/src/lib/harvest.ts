@@ -19,7 +19,9 @@ import * as opBankApi from './opBankApi';
 export const harvest = async function (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot, harvestDocumentReference: FirebaseFirestore.DocumentReference) {
 
     // Poll stash balance (queries OP APIs for account balances)
-    const stashAccountBalance = await opBankApi.stashAccountBalance(userDocumentSnapshot);
+    userDocumentSnapshot = await opBankApi.syncUserAccountInfo(userDocumentSnapshot);
+    const user = userDocumentSnapshot.data();
+    const stashAccountBalance = user.accountInfo.stashAccount.balance || 0;
 
     // Check days since last harvest
     // TODO: Actually check, for demo assume it was 1 day ago
