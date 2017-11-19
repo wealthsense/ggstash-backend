@@ -7,6 +7,7 @@ import axios, {AxiosRequestConfig, AxiosPromise} from 'axios';
 import * as _ from 'lodash';
 
 /**
+ *
  * @param {FirebaseFirestore.DocumentSnapshot} userDocumentSnapshot
  * @returns {Promise<FirebaseFirestore.DocumentSnapshot>}
  */
@@ -96,7 +97,7 @@ export const syncUserAccountInfo = async (userDocumentSnapshot: FirebaseFirestor
     await userDocumentReference.set(updateAttributes, {merge: true});
     const updatedUserDocumentSnapshot = await userDocumentReference.get();
 
-    console.log('updated userDocumentSnapshot after user: ', updatedUserDocumentSnapshot.data());
+    console.log('updated userDocumentSnapshot after user account info sync: ', updatedUserDocumentSnapshot.data());
 
     return updatedUserDocumentSnapshot;
 
@@ -303,5 +304,51 @@ export const stash = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnap
 
 };
 
+/**
+ * Mock stash via account info balance modification
+ *
+ * @param {FirebaseFirestore.DocumentSnapshot} userDocumentSnapshot
+ * @returns {Promise<FirebaseFirestore.DocumentSnapshot>}
+ */
+export const mockStash = async (userDocumentSnapshot: FirebaseFirestore.DocumentSnapshot, amount: float) => {
 
+    const user: FirebaseFirestore.DocumentData = await userDocumentSnapshot.data();
+    console.log('user: ', user);
+
+    if (!user.accountInfo) {
+        console.log('No user.accountInfo');
+        throw Error('No user.accountInfo');
+    }
+
+    if (!user.accountInfo.stashAccount) {
+        console.log('No user.accountInfo.stashAccount');
+        throw Error('No user.accountInfo.stashAccount');
+    }
+
+    if (!user.accountInfo.checkingsAccount) {
+        console.log('No user.accountInfo.checkingsAccount');
+        throw Error('No user.accountInfo.checkingsAccount');
+    }
+
+    // Mock the stash
+    user.accountInfo.stashAccount.balance += amount;
+    user.accountInfo.checkingsAccount.balance -= amount;
+
+    const mockAccountInfoSyncTimestamp = new Date();
+    const updateAttributes = {
+        accountInfo: {
+            stashAccount: user.accountInfo.stashAccount,
+            checkingsAccount: user.accountInfo.checkingsAccount,
+            mockAccountInfoSyncTimestamp,
+        }
+    };
+    const userDocumentReference = userDocumentSnapshot.ref;
+    await userDocumentReference.set(updateAttributes, {merge: true});
+    const updatedUserDocumentSnapshot = await userDocumentReference.get();
+
+    console.log('updated userDocumentSnapshot after mock stash: ', updatedUserDocumentSnapshot.data());
+
+    return updatedUserDocumentSnapshot;
+
+};
 

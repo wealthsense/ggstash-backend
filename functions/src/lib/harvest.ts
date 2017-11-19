@@ -23,6 +23,9 @@ export const harvest = async function (userDocumentSnapshot: FirebaseFirestore.D
     const user = userDocumentSnapshot.data();
     const stashAccountBalance = user.accountInfo.stashAccount.balance || 0;
 
+    // Check last harvest
+    // TODO: If last harvest was within 1 day, deduct those credits from the credits to issue (only newly stashed balanced should count)
+
     // Check days since last harvest
     // TODO: Actually check, for demo assume it was 1 day ago
     // TODO: possibly via corda-check to be certain that it was registered at that time
